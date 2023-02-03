@@ -6,4 +6,27 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningLevel>5</WarningLevel>
+    <NoWarn>1701;1702;8604;8602;8600</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>5</WarningLevel>
+    <NoWarn>1701;1702;8604;8602;8600</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="DataSource\UnitTest\" />
+    <Folder Include="DataSource\Production\" />
+    <Folder Include="Model\" />
+    <Folder Include="Rest\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OData" Version="8.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.13" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.13" />
+  </ItemGroup>
+
 </Project>
