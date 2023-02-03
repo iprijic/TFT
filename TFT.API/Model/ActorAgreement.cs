@@ -18,7 +18,7 @@ namespace TFT.API.Business.Model
         [Required]
         public string IsAccepted { get; set; }
         [Column(TypeName = "decimal(18, 0)")]
-        public decimal Honour { get; set; }
+        public decimal Honorarium { get; set; }
         public long MovieID { get; set; }
         public long ActorID { get; set; }
 
