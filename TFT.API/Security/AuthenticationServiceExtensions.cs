@@ -1,5 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OData;
 using System.Text;
@@ -9,6 +13,21 @@ namespace TFT.API.Security
 {
     public static class AuthenticationServiceExtensions
     {
+        public static IServiceCollection AddDataProtector(this IServiceCollection services,String contentRootPath, ConfigurationManager configuration)
+        {
+            IDataProtector protector = DataProtectionProvider.Create(new System.IO.DirectoryInfo($@"{contentRootPath}{configuration.GetValue<String>("Protection:Keys")}"), options =>
+            {
+                options.SetDefaultKeyLifetime(TimeSpan.FromDays(365 * 20));
+                options.UseCryptographicAlgorithms(new AuthenticatedEncryptorConfiguration()
+                {
+                    EncryptionAlgorithm = EncryptionAlgorithm.AES_256_CBC,
+                    ValidationAlgorithm = ValidationAlgorithm.HMACSHA256
+                });
+            }).CreateProtector(configuration.GetValue<String>("Protection:Cipher"));
+
+            return services.AddSingleton(protector);
+        }
+
         public static AuthenticationBuilder AddJWTAuthentication(this IServiceCollection services, ConfigurationManager configuration)
         {
             return services.AddAuthentication(options =>

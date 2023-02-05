@@ -15,16 +15,19 @@ namespace TFT.API.Controllers
     };
 
         private readonly ILogger<WeatherForecastController> _logger;
+        private Entities _entities;
 
         public WeatherForecastController(ILogger<WeatherForecastController> logger, Entities entities)
         {
             _logger = logger;
-            var g = entities.Genres.ToList();
+            _entities = entities;
         }
 
         [HttpGet]
         public IEnumerable<WeatherForecast> Get()
         {
+            var g = _entities.Genres.ToList();
+
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = DateTime.Now.AddDays(index),

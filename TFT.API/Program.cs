@@ -29,6 +29,7 @@ builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
 RepositoryBuilder.Build(builder);
 
+builder.Services.AddDataProtector(builder.Environment.ContentRootPath, builder.Configuration);
 builder.Services.AddJWTAuthentication(builder.Configuration);
 
 builder.Services.AddDbContext<Entities>(options => options
