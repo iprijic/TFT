@@ -16,6 +16,8 @@ namespace TFT.API.Business.Model
             Movies = new HashSet<Movie>();
         }
 
+        [Required]
+        public string DirectorID { get; set; }
         [Key]
         public long ID { get; set; }
 

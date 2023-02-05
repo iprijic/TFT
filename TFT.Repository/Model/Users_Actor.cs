@@ -16,6 +16,8 @@ namespace TFT.API.Business.Model
             ActorAgreements = new HashSet<ActorAgreement>();
         }
 
+        [Required]
+        public string ActorID { get; set; }
         [Key]
         public long ID { get; set; }
 

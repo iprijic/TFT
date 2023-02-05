@@ -17,16 +17,30 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="DataSource\UnitTest\" />
-    <Folder Include="DataSource\Production\" />
-    <Folder Include="Model\" />
+    <Compile Remove="DataSource\**" />
+    <Compile Remove="Model\**" />
+    <Content Remove="DataSource\**" />
+    <Content Remove="Model\**" />
+    <EmbeddedResource Remove="DataSource\**" />
+    <EmbeddedResource Remove="Model\**" />
+    <None Remove="DataSource\**" />
+    <None Remove="Model\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Rest\" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.13" />
     <PackageReference Include="Microsoft.AspNetCore.OData" Version="8.0.12" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.13" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.13" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.26.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TFT.Repository\TFT.Repository.csproj" />
   </ItemGroup>
 
 </Project>

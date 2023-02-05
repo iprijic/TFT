@@ -21,7 +21,6 @@ namespace TFT.API.Business.Model
         public virtual DbSet<Genre> Genres { get; set; }
         public virtual DbSet<GenreMovie> GenreMovies { get; set; }
         public virtual DbSet<Movie> Movies { get; set; }
-        public virtual DbSet<MovieGroup> MovieGroups { get; set; }
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<Users_Actor> Users_Actors { get; set; }
         public virtual DbSet<Users_Director> Users_Directors { get; set; }
@@ -31,7 +30,7 @@ namespace TFT.API.Business.Model
             if (!optionsBuilder.IsConfigured)
             {
 //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-//               optionsBuilder.UseSqlServer("Server=(LocalDB)\\MSSQLLocalDB;attachdbfilename=C:\\Programming Projects\\qualification process\\TFT Falcon\\TFT\\TFT.API\\DataSource\\Production\\TFT.mdf;Database=TFT;Trusted_Connection=True;");
+//                optionsBuilder.UseSqlServer("Server=(LocalDB)\\MSSQLLocalDB;attachdbfilename=C:\\Programming Projects\\qualification process\\TFT Falcon\\TFT\\TFT.Repository\\DataSource\\Production\\TFT.mdf;Database=TFT;Trusted_Connection=True;");
             }
         }
 
