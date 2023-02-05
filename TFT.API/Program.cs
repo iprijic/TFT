@@ -18,6 +18,8 @@ using System.Text.Json.Serialization;
 using Microsoft.OData;
 using Microsoft.AspNetCore.Http;
 using TFT.Repository;
+using TFT.API.Security;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,6 +60,24 @@ builder.Services
         {
             OnAuthenticationFailed = context =>
             {
+                context.NoResult();
+                context.Response.StatusCode = (int)System.Net.HttpStatusCode.Unauthorized;
+
+                ODataError error = new ODataError()
+                {
+                    ErrorCode = context.Response.StatusCode.ToString(),
+                    Message = "Unauthorized access",
+                    Target = "API"
+                };
+
+                if(context.HttpContext.Items.ContainsKey(nameof(JwtBearerEvents.OnAuthenticationFailed)))
+                {
+                    context.HttpContext.Items.Remove(nameof(JwtBearerEvents.OnAuthenticationFailed));
+                }
+
+                context.HttpContext.Items.Add(nameof(JwtBearerEvents.OnAuthenticationFailed), true);
+
+                context.Response.WriteAsync(JsonSerializer.Serialize<ODataError>(error)).Wait();
                 return Task.CompletedTask;
             },
 
@@ -109,10 +129,25 @@ var app = builder.Build();
 //    return next();
 //});
 
+
 app.Use((context, next) =>
 {
+    if (context.Request.Path.StartsWithSegments(new PathString("/terminated")))
+    {
+        return Task.CompletedTask;
+    }
+
     if (Boolean.Parse(builder.Configuration["Debugging:DisableAuth"]) == false && context.User.Identity.IsAuthenticated == false)
     {
+        if(context.Request.Headers.ContainsKey("Authorization"))
+        {
+            String[] headerParts = context.Request.Headers["Authorization"].FirstOrDefault().Split(" ");
+            if (headerParts[0] == "Bearer" && String.IsNullOrEmpty(headerParts[1]) == false)
+            {
+                return next();
+            }
+        }
+
         if(context.Request.Method.ToUpper() == "POST" && context.Request.Path.StartsWithSegments(new PathString("/authentication")))
         {
             return next();
@@ -140,15 +175,20 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
+app.Use((context, next) =>
+{
+    if (context.Items.ContainsKey(nameof(JwtBearerEvents.OnAuthenticationFailed)) 
+    && context.Items[nameof(JwtBearerEvents.OnAuthenticationFailed)] is bool
+    && (bool)context.Items[nameof(JwtBearerEvents.OnAuthenticationFailed)])
+    {
+        context.Items.Remove(nameof(JwtBearerEvents.OnAuthenticationFailed));
+        return Task.CompletedTask;
+    }
+
+    return next();
+});
+
 app.MapControllers();
-
-//app.MapControllerRoute(name: "authentication1",
-//                pattern: "authentication/{*SignIn}",
-//                defaults: new { controller = "Authentication" /*, action = "SignIn"*/ });
-
-//app.MapControllerRoute(name: "authentication2",
-//                pattern: "authentication/{*SignOutApi}",
-//                defaults: new { controller = "Authentication" /*, action = "SignOutApi" */});
 
 app.MapControllerRoute(
     name: "default",

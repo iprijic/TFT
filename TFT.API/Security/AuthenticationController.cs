@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OData.UriParser;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
@@ -31,10 +32,16 @@ namespace TFT.API.Security
 
                 JwtSecurityToken token = new JwtSecurityToken(_appConfig["Jwt:Issuer"],
                   _appConfig["Jwt:Issuer"],
-                  expires: DateTime.Now.AddMinutes(30),
+                  expires: DateTime.Now.AddDays(7),
                   signingCredentials: creds);
 
                 String tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+                tokenString = "Bearer " + tokenString;
+
+                IActionResult response = Ok(new { token = tokenString });
+                return response;
+
+                // Request.Headers.Add("Authorization", "Bearer " + tokenString);
             }
 
             return Content("", "application/json");
