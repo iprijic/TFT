@@ -3,10 +3,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -46,6 +48,9 @@ namespace TFT.API.Test
         /// </summary>
         public HttpResponse Response => HttpContext?.Response!;
 
+        private Mock<HttpContext> httpContext;
+
+
         [Fact]
         void Login_Test()
         {
@@ -58,8 +63,131 @@ namespace TFT.API.Test
             Entities entites = DataFactory.GetDbContext();
             Assert.NotEqual(0, entites.Users.Count());
 
+            HttpRequest request = Mock.Of<HttpRequest>();
+            HttpResponse response = Mock.Of<HttpResponse>();
+            response.StatusCode = StatusCodes.Status204NoContent;
+
+            AuthenticationController authController = new AuthenticationController(appConfig, entites, protector);
+
+            httpContext = new Mock<HttpContext>();
+
+            httpContext.Setup(c => c.Request)
+                           .Returns(request);
+            httpContext.Setup(c => c.Response)
+                           .Returns(response);
+
+            authController.ControllerContext.HttpContext = httpContext.Object;
+
+            FormCollection form;
+            IActionResult result;
+            Dictionary<string, StringValues> formDictionary = new Dictionary<string, StringValues>();
+
+            formDictionary.Clear();
+            formDictionary.Add(nameof(User.Username), "iperic21@gmail.com");
+            formDictionary.Add("Password", "test1234");
+            form = new FormCollection(formDictionary);
+            httpContext.Object.Request.Form = form;
+            result = authController.SignInApi();
+
+            if (result is OkObjectResult)
+            {
+                Assert.Equal(StatusCodes.Status200OK, ((OkObjectResult)result).StatusCode);
+            }
+
+            if (result is OkObjectResult && (result as OkObjectResult).Value is FormatToken)
+            {
+                FormatToken = (result as OkObjectResult).Value as FormatToken;
+            }
+            else
+            {
+                throw new Exception("Improper IActionResult cast in AuthenticationController");
+            }
+
+            IEnumerable<Claim> claims = SecurityHandler.GetClaimsFromJWT(FormatToken.Token);
+
+            ClaimsPrincipal user = SecurityHandler.GetIdentity(claims);
+            httpContext.Setup(c => c.User)
+                          .Returns(user);
+            httpContext.Setup(c => c.User.Identity.IsAuthenticated).Returns(true);
+            Dictionary<string, StringValues> authHeader = new Dictionary<string, StringValues>() {
+                { "Authorization" , new StringValues(FormatToken.FullTokenFormat) }
+            };
+
+            IHeaderDictionary hd = new HeaderDictionary(authHeader);
+            httpContext.Setup(c => c.Request.Headers).Returns(hd);
 
             entites.Dispose();
+        }
+
+        [Fact]
+        void Register_Director_Test()
+        {
+            Login_Test();
+
+            IConfigurationRoot appConfig = ConfigurationFactory.GetAppConfig();
+            Assert.NotNull(appConfig);
+
+            IDataProtector protector = DataFactory.GetDataProtector();
+            Assert.NotNull(protector);
+
+            Entities entites = DataFactory.GetDbContext();
+            Assert.NotEqual(0, entites.Users.Count());
+
+            FormCollection form;
+            IActionResult result;
+
+            Dictionary<string, StringValues> formDictionary = new Dictionary<string, StringValues>();
+            AuthenticationController authController = new AuthenticationController(appConfig, entites, protector);
+
+            var tz = new Users_Director[]
+            {
+                new Users_Director()
+                {
+                    DirectorID = "23252"
+                }
+            };
+
+            formDictionary.Clear();
+            formDictionary.Add(nameof(User.Username), "glucas@gmail.com");
+            formDictionary.Add(nameof(User.Firstname), "George");
+            formDictionary.Add(nameof(User.Lastname), "Lucas");
+            form = new FormCollection(formDictionary);
+            httpContext.Object.Request.Form = form;
+
+            result = authController.RegisterUser();
+            if (result is OkObjectResult)
+            {
+                Assert.Equal(StatusCodes.Status200OK, ((OkObjectResult)result).StatusCode);
+            }
+
+            if (result is OkObjectResult && (result as OkObjectResult).Value is FormatToken)
+            {
+                FormatToken = (result as OkObjectResult).Value as FormatToken;
+            }
+            else
+            {
+                throw new Exception("Improper IActionResult cast in AuthenticationController");
+            }
+
+
+        }
+
+        [Fact]
+        void Register_Actor_Test()
+        {
+            Login_Test();
+
+            IConfigurationRoot appConfig = ConfigurationFactory.GetAppConfig();
+            Assert.NotNull(appConfig);
+
+            IDataProtector protector = DataFactory.GetDataProtector();
+            Assert.NotNull(protector);
+
+            Entities entites = DataFactory.GetDbContext();
+            Assert.NotEqual(0, entites.Users.Count());
+
+            AuthenticationController authController = new AuthenticationController(appConfig, entites, protector);
+
         }
 
         /// <summary>
@@ -92,16 +220,12 @@ namespace TFT.API.Test
             HttpResponse response = Mock.Of<HttpResponse>();
             response.StatusCode = StatusCodes.Status204NoContent;
 
-            Mock<HttpContext> httpContext = new Mock<HttpContext>();
-
-            //ClaimsPrincipal user = Mock.Of<ClaimsPrincipal>();
+            httpContext = new Mock<HttpContext>();
 
             httpContext.Setup(c => c.Request)
                            .Returns(request);
             httpContext.Setup(c => c.Response)
                            .Returns(response);
-            //httpContext.Setup(c => c.User)
-            //              .Returns(user);
 
             authController.ControllerContext.HttpContext = httpContext.Object;
 
@@ -180,8 +304,6 @@ namespace TFT.API.Test
             .ForEach(p => Assert.Equal(formDictionary[p].FirstOrDefault(), SecurityHandler.GetClaimByName(claims, p)));
 
             DataFactory.FillRequiredTables(entites);
-
-
 
             ClaimsPrincipal user = SecurityHandler.GetIdentity(claims);
             httpContext.Setup(c => c.User)

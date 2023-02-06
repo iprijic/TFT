@@ -96,10 +96,7 @@ namespace TFT.API.Security
                         Hash = saltedHash.Key,
                         Salt = saltedHash.Value
                     };
-
-                    //_entites.Attach(user);
-                    //_entites.ChangeTracker.Clear();
-
+   
                     _entites.Add(user);
 
                     try
