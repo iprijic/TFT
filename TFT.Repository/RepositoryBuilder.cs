@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
 using System.Linq;
@@ -19,17 +20,21 @@ namespace TFT.Repository
         //    string AppName = MyConfig.GetValue<string>("AppSettings:Name");
         //}
 
-        public static void Build(WebApplicationBuilder webBuilder)
+        public static void Build(WebApplicationBuilder builder)
         {
+            throw new NotImplementedException();
+        }
 
+        public static void Build(String contentRootPath, String subFolder = "Production")
+        {
             Assembly assembly = Assembly.GetExecutingAssembly();
             String libName = assembly.GetName().Name ?? "";
             
-            String fullPath = Path.Combine(String.Join(@"\", 
-                webBuilder.Environment.ContentRootPath.Split(@"\").Where(s => String.IsNullOrEmpty(s) == false).Reverse().Skip(1).Reverse()), 
-                libName, "DataSource");
+            String fullPath = Path.Combine(String.Join(@"\",
+                contentRootPath.Split(@"\").Where(s => String.IsNullOrEmpty(s) == false).Reverse().Skip(1).Reverse()),
+            libName, "DataSource");
 
-            AppDomain.CurrentDomain.SetData("DataDirectory", fullPath);
+            AppDomain.CurrentDomain.SetData("DataDirectory", Path.Combine(fullPath, subFolder));
         }
     }
 }

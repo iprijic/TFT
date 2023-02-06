@@ -27,7 +27,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
-RepositoryBuilder.Build(builder);
+RepositoryBuilder.Build(builder.Environment.ContentRootPath);
 
 builder.Services.AddDataProtector(builder.Environment.ContentRootPath, builder.Configuration);
 builder.Services.AddJWTAuthentication(builder.Configuration);

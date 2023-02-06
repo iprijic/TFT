@@ -49,8 +49,7 @@ namespace TFT.API.Security
         [HttpPost]
         public IActionResult RegisterUser()
         {
-            
-            if (Request.Form.Keys.Intersect(new[] {
+             if (Request.Form.Keys.Intersect(new[] {
                 nameof(Business.Model.User.Username) , nameof(Business.Model.User.Firstname) , nameof(Business.Model.User.Lastname),
                 "PasswordInitial" , "PasswordConfirmed"
             }).Any())
@@ -67,11 +66,13 @@ namespace TFT.API.Security
                         Target = "API"
                     };
 
-                    return Ok(error);
+                    return BadRequest(error);
                 }
 
                 if (Request.Form["PasswordInitial"] != Request.Form["PasswordConfirmed"])
                 {
+                    Response.StatusCode = (int)System.Net.HttpStatusCode.BadRequest;
+
                     ODataError error = new ODataError()
                     {
                         ErrorCode = Response.StatusCode.ToString(),
@@ -79,7 +80,7 @@ namespace TFT.API.Security
                         Target = "API"
                     };
 
-                    return Ok(error);
+                    return BadRequest(error);
                 }
 
                 if(_entites.Users.Any() == false)
@@ -96,6 +97,9 @@ namespace TFT.API.Security
                         Salt = saltedHash.Value
                     };
 
+                    //_entites.Attach(user);
+                    //_entites.ChangeTracker.Clear();
+
                     _entites.Add(user);
 
                     try
@@ -104,6 +108,7 @@ namespace TFT.API.Security
                     }
                     catch (Exception ex)
                     {
+                        _entites.ChangeTracker.Clear();
                         Response.StatusCode = (int)System.Net.HttpStatusCode.InternalServerError;
 
                         ODataError error = new ODataError()
@@ -113,7 +118,7 @@ namespace TFT.API.Security
                             Target = "API"
                         };
 
-                        return Ok(error);
+                        return StatusCode(Response.StatusCode, error);
                     }
 
                 }
@@ -128,7 +133,7 @@ namespace TFT.API.Security
 
         private IActionResult GenerateToken()
         {
-            User user = _entites.Users.FirstOrDefault(u => u.Username == Request.Form["Username"].FirstOrDefault());
+            User user = _entites.Users.FirstOrDefault(u => u.Username == Request.Form[nameof(Business.Model.User.Username)].FirstOrDefault());
             if (user == null)
             {
                 Response.StatusCode = (int)System.Net.HttpStatusCode.Unauthorized;
@@ -140,7 +145,7 @@ namespace TFT.API.Security
                     Target = "API"
                 };
 
-                return Ok(error);
+                return Unauthorized();
             }
 
             KeyValuePair<String, String> saltedHash = Hashing(Request.Form["PasswordInitial"].FirstOrDefault() ?? Request.Form["Password"].FirstOrDefault(), user.Salt);
@@ -156,16 +161,16 @@ namespace TFT.API.Security
                     Target = "API"
                 };
 
-                return Ok(error);
+                return Unauthorized(error);
             }
 
 
             IEnumerable<Claim> claims = new[]
             {
-                    new Claim("Username", user.Username),
-                    new Claim("FirstName", user.Firstname),
-                    new Claim("LastName", user.Lastname),
-                    new Claim("Role", user.Role)
+                    new Claim(nameof(Business.Model.User.Username), user.Username),
+                    new Claim(nameof(Business.Model.User.Firstname), user.Firstname),
+                    new Claim(nameof(Business.Model.User.Lastname), user.Lastname),
+                    new Claim(nameof(Business.Model.User.Role), user.Role)
             };
 
             SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor();
@@ -181,12 +186,9 @@ namespace TFT.API.Security
               );
 
             String tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-            tokenString = "Bearer " + tokenString;
 
-            IActionResult response = Ok(new { token = tokenString });
+            IActionResult response = Ok(new FormatToken { Token = tokenString, FullTokenFormat = "Bearer " + tokenString });
             return response;
-
-            // Request.Headers.Add("Authorization", "Bearer " + tokenString);
         }
 
         [HttpPost]
@@ -199,28 +201,21 @@ namespace TFT.API.Security
                 // Request.Headers.Add("Authorization", "Bearer " + tokenString);
             }
 
-            return Content("", "application/json");
+            return BadRequest();
         }
-
-        //[HttpGet]
-        //public IActionResult SignOutApi()
-        //{
-        //    // return new SignOutResult();
-        //    return Content("", "application/json");
-        //}
-
+ 
         [HttpGet]
         public IActionResult ResetPassword()
         {
-           // throw new NotImplementedException();
+            throw new NotImplementedException();
 
-            return Content("", "application/json");
+            //return BadRequest();
         }
 
 
-        public IActionResult Index()
-        {
-            return Content("", "application/json");
-        }
+        //public IActionResult Index()
+        //{
+        //    return Content("Index", "application/json");
+        //}
     }
 }
