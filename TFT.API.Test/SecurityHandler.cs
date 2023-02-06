@@ -17,6 +17,7 @@ namespace TFT.API.Test
             return securityToken.Claims;
         }
 
+        public static ClaimsPrincipal GetIdentity(IEnumerable<Claim> claims) => new ClaimsPrincipal(new ClaimsIdentity(claims));
         public static String? GetClaimByName(IEnumerable<Claim> claims, String claimName) => claims.FirstOrDefault(c => c.Type == claimName)?.Value;
     }
 }

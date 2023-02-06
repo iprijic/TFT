@@ -88,5 +88,42 @@ namespace TFT.API.Test
 
             return protector;
         }
+
+        static public void FillRequiredTables(Entities entities)
+        {
+            entities.Genres.AddRange(new Genre[]
+            {
+                new Genre()
+                {
+                    Name = "Action"
+                },
+                new Genre()
+                {
+                    Name = "Science Fiction"
+                },
+                new Genre()
+                {
+                    Name = "Romance"
+                },
+                new Genre()
+                {
+                    Name = "Adventure"
+                }
+            });
+
+            try
+            {
+                entities.SaveChanges();
+            }
+            catch(Exception ex)
+            {
+                entities.ChangeTracker.Clear();
+                String msg = ex.Message;
+                Console.WriteLine(msg);
+                Console.WriteLine(ex.StackTrace);
+
+                DropAndCreateDb();
+            }
+        }
     }
 }

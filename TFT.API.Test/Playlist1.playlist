@@ -1,0 +1,36 @@
+<Playlist Version="2.0">
+  <Rule Name="Includes" Match="Any">
+    <Rule Match="All">
+      <Property Name="Solution" />
+      <Rule Match="Any">
+        <Rule Match="All">
+          <Property Name="Project" Value="TFT.API.Test" />
+          <Rule Match="Any">
+            <Rule Match="All">
+              <Property Name="Namespace" Value="TFT.API.Test" />
+              <Rule Match="Any">
+                <Rule Match="All">
+                  <Property Name="Class" Value="AuthenticationControllerTest" />
+                  <Rule Match="Any">
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="TFT.API.Test.AuthenticationControllerTest.Login_Test" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="TFT.API.Test.AuthenticationControllerTest.Login_Test" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="TFT.API.Test.AuthenticationControllerTest.Register_Admin_Test" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="TFT.API.Test.AuthenticationControllerTest.Register_Admin_Test" />
+                      </Rule>
+                    </Rule>
+                  </Rule>
+                </Rule>
+              </Rule>
+            </Rule>
+          </Rule>
+        </Rule>
+      </Rule>
+    </Rule>
+  </Rule>
+</Playlist>

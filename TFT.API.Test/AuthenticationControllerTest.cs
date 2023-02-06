@@ -46,6 +46,22 @@ namespace TFT.API.Test
         /// </summary>
         public HttpResponse Response => HttpContext?.Response!;
 
+        [Fact]
+        void Login_Test()
+        {
+            IConfigurationRoot appConfig = ConfigurationFactory.GetAppConfig();
+            Assert.NotNull(appConfig);
+
+            IDataProtector protector = DataFactory.GetDataProtector();
+            Assert.NotNull(protector);
+
+            Entities entites = DataFactory.GetDbContext();
+            Assert.NotEqual(0, entites.Users.Count());
+
+
+            entites.Dispose();
+        }
+
         /// <summary>
         /// Kreiranje samo jednog i glavnog administratora u potpuno praznoj bazi podataka.
         /// Ovaj administrator će moći kreirati glumce i direktore.
@@ -78,14 +94,14 @@ namespace TFT.API.Test
 
             Mock<HttpContext> httpContext = new Mock<HttpContext>();
 
-            ClaimsPrincipal user = Mock.Of<ClaimsPrincipal>();
+            //ClaimsPrincipal user = Mock.Of<ClaimsPrincipal>();
 
             httpContext.Setup(c => c.Request)
                            .Returns(request);
             httpContext.Setup(c => c.Response)
                            .Returns(response);
-            httpContext.Setup(c => c.User)
-                          .Returns(user);
+            //httpContext.Setup(c => c.User)
+            //              .Returns(user);
 
             authController.ControllerContext.HttpContext = httpContext.Object;
 
@@ -163,6 +179,22 @@ namespace TFT.API.Test
             new[] { nameof(User.Username), nameof(User.Firstname), nameof(User.Lastname) }.ToList()
             .ForEach(p => Assert.Equal(formDictionary[p].FirstOrDefault(), SecurityHandler.GetClaimByName(claims, p)));
 
+            DataFactory.FillRequiredTables(entites);
+
+
+
+            ClaimsPrincipal user = SecurityHandler.GetIdentity(claims);
+            httpContext.Setup(c => c.User)
+                          .Returns(user);
+            httpContext.Setup(c =>c.User.Identity.IsAuthenticated).Returns(true);
+            Dictionary<string, StringValues> authHeader = new Dictionary<string, StringValues>() {
+                { "Authorization" , new StringValues(FormatToken.FullTokenFormat) }
+            };
+
+            IHeaderDictionary hd = new HeaderDictionary(authHeader);
+            httpContext.Setup(c => c.Request.Headers).Returns(hd);
+
+            entites.Dispose();
         }
     }
 }
