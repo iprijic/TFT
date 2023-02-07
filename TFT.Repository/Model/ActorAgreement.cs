@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TFT.API.Business.Model
 {
-    [Index(nameof(ActorID), Name = "IX_FK_ActorAgreementActor")]
+    [Index(nameof(ActorID), Name = "IX_FK_ActorActorAgreement")]
     [Index(nameof(MovieID), Name = "IX_FK_ActorAgreementMovie")]
     public partial class ActorAgreement
     {
@@ -23,8 +23,8 @@ namespace TFT.API.Business.Model
         public long ActorID { get; set; }
 
         [ForeignKey(nameof(ActorID))]
-        [InverseProperty(nameof(Users_Actor.ActorAgreements))]
-        public virtual Users_Actor Actor { get; set; }
+        [InverseProperty("ActorAgreements")]
+        public virtual Actor Actor { get; set; }
         [ForeignKey(nameof(MovieID))]
         [InverseProperty("ActorAgreements")]
         public virtual Movie Movie { get; set; }

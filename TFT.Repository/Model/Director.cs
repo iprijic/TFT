@@ -8,10 +8,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TFT.API.Business.Model
 {
-    public partial class User
+    public partial class Director
     {
+        public Director()
+        {
+            Movies = new HashSet<Movie>();
+        }
+
         [Key]
         public long ID { get; set; }
+        [Required]
+        public string DirectorID { get; set; }
         [Required]
         public string Username { get; set; }
         [Required]
@@ -24,5 +31,8 @@ namespace TFT.API.Business.Model
         public string Lastname { get; set; }
         [Required]
         public string Role { get; set; }
+
+        [InverseProperty(nameof(Movie.Director))]
+        public virtual ICollection<Movie> Movies { get; set; }
     }
 }

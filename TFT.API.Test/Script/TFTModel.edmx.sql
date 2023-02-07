@@ -2,7 +2,7 @@
 -- --------------------------------------------------
 -- Entity Designer DDL Script for SQL Server 2005, 2008, 2012 and Azure
 -- --------------------------------------------------
--- Date Created: 02/05/2023 12:01:18
+-- Date Created: 02/07/2023 01:53:55
 -- Generated from EDMX file: C:\Programming Projects\SVAM Plus\Repository\Repository4\TFTModel.edmx
 -- --------------------------------------------------
 
@@ -20,23 +20,17 @@ GO
 IF OBJECT_ID(N'[dbo].[FK_ActorAgreementMovie]', 'F') IS NOT NULL
     ALTER TABLE [dbo].[ActorAgreements] DROP CONSTRAINT [FK_ActorAgreementMovie];
 GO
-IF OBJECT_ID(N'[dbo].[FK_ActorAgreementActor]', 'F') IS NOT NULL
-    ALTER TABLE [dbo].[ActorAgreements] DROP CONSTRAINT [FK_ActorAgreementActor];
-GO
-IF OBJECT_ID(N'[dbo].[FK_DirectorMovie]', 'F') IS NOT NULL
-    ALTER TABLE [dbo].[Movies] DROP CONSTRAINT [FK_DirectorMovie];
-GO
 IF OBJECT_ID(N'[dbo].[FK_GenreMovie_Genre]', 'F') IS NOT NULL
     ALTER TABLE [dbo].[GenreMovie] DROP CONSTRAINT [FK_GenreMovie_Genre];
 GO
 IF OBJECT_ID(N'[dbo].[FK_GenreMovie_Movie]', 'F') IS NOT NULL
     ALTER TABLE [dbo].[GenreMovie] DROP CONSTRAINT [FK_GenreMovie_Movie];
 GO
-IF OBJECT_ID(N'[dbo].[FK_Actor_inherits_User]', 'F') IS NOT NULL
-    ALTER TABLE [dbo].[Users_Actor] DROP CONSTRAINT [FK_Actor_inherits_User];
+IF OBJECT_ID(N'[dbo].[FK_ActorActorAgreement]', 'F') IS NOT NULL
+    ALTER TABLE [dbo].[ActorAgreements] DROP CONSTRAINT [FK_ActorActorAgreement];
 GO
-IF OBJECT_ID(N'[dbo].[FK_Director_inherits_User]', 'F') IS NOT NULL
-    ALTER TABLE [dbo].[Users_Director] DROP CONSTRAINT [FK_Director_inherits_User];
+IF OBJECT_ID(N'[dbo].[FK_MovieDirector]', 'F') IS NOT NULL
+    ALTER TABLE [dbo].[Movies] DROP CONSTRAINT [FK_MovieDirector];
 GO
 
 -- --------------------------------------------------
@@ -55,11 +49,11 @@ GO
 IF OBJECT_ID(N'[dbo].[ActorAgreements]', 'U') IS NOT NULL
     DROP TABLE [dbo].[ActorAgreements];
 GO
-IF OBJECT_ID(N'[dbo].[Users_Actor]', 'U') IS NOT NULL
-    DROP TABLE [dbo].[Users_Actor];
+IF OBJECT_ID(N'[dbo].[Actors]', 'U') IS NOT NULL
+    DROP TABLE [dbo].[Actors];
 GO
-IF OBJECT_ID(N'[dbo].[Users_Director]', 'U') IS NOT NULL
-    DROP TABLE [dbo].[Users_Director];
+IF OBJECT_ID(N'[dbo].[Directors]', 'U') IS NOT NULL
+    DROP TABLE [dbo].[Directors];
 GO
 IF OBJECT_ID(N'[dbo].[GenreMovie]', 'U') IS NOT NULL
     DROP TABLE [dbo].[GenreMovie];
@@ -112,17 +106,29 @@ CREATE TABLE [dbo].[ActorAgreements] (
 );
 GO
 
--- Creating table 'Users_Actor'
-CREATE TABLE [dbo].[Users_Actor] (
+-- Creating table 'Actors'
+CREATE TABLE [dbo].[Actors] (
+    [ID] bigint IDENTITY(1,1) NOT NULL,
     [ActorID] nvarchar(max)  NOT NULL,
-    [ID] bigint  NOT NULL
+    [Username] nvarchar(max)  NOT NULL,
+    [Hash] nvarchar(max)  NOT NULL,
+    [Salt] nvarchar(max)  NOT NULL,
+    [Firstname] nvarchar(max)  NOT NULL,
+    [Lastname] nvarchar(max)  NOT NULL,
+    [Role] nvarchar(max)  NOT NULL
 );
 GO
 
--- Creating table 'Users_Director'
-CREATE TABLE [dbo].[Users_Director] (
+-- Creating table 'Directors'
+CREATE TABLE [dbo].[Directors] (
+    [ID] bigint IDENTITY(1,1) NOT NULL,
     [DirectorID] nvarchar(max)  NOT NULL,
-    [ID] bigint  NOT NULL
+    [Username] nvarchar(max)  NOT NULL,
+    [Hash] nvarchar(max)  NOT NULL,
+    [Salt] nvarchar(max)  NOT NULL,
+    [Firstname] nvarchar(max)  NOT NULL,
+    [Lastname] nvarchar(max)  NOT NULL,
+    [Role] nvarchar(max)  NOT NULL
 );
 GO
 
@@ -161,15 +167,15 @@ ADD CONSTRAINT [PK_ActorAgreements]
     PRIMARY KEY CLUSTERED ([ID] ASC);
 GO
 
--- Creating primary key on [ID] in table 'Users_Actor'
-ALTER TABLE [dbo].[Users_Actor]
-ADD CONSTRAINT [PK_Users_Actor]
+-- Creating primary key on [ID] in table 'Actors'
+ALTER TABLE [dbo].[Actors]
+ADD CONSTRAINT [PK_Actors]
     PRIMARY KEY CLUSTERED ([ID] ASC);
 GO
 
--- Creating primary key on [ID] in table 'Users_Director'
-ALTER TABLE [dbo].[Users_Director]
-ADD CONSTRAINT [PK_Users_Director]
+-- Creating primary key on [ID] in table 'Directors'
+ALTER TABLE [dbo].[Directors]
+ADD CONSTRAINT [PK_Directors]
     PRIMARY KEY CLUSTERED ([ID] ASC);
 GO
 
@@ -198,36 +204,6 @@ ON [dbo].[ActorAgreements]
     ([MovieID]);
 GO
 
--- Creating foreign key on [ActorID] in table 'ActorAgreements'
-ALTER TABLE [dbo].[ActorAgreements]
-ADD CONSTRAINT [FK_ActorAgreementActor]
-    FOREIGN KEY ([ActorID])
-    REFERENCES [dbo].[Users_Actor]
-        ([ID])
-    ON DELETE NO ACTION ON UPDATE NO ACTION;
-GO
-
--- Creating non-clustered index for FOREIGN KEY 'FK_ActorAgreementActor'
-CREATE INDEX [IX_FK_ActorAgreementActor]
-ON [dbo].[ActorAgreements]
-    ([ActorID]);
-GO
-
--- Creating foreign key on [DirectorID] in table 'Movies'
-ALTER TABLE [dbo].[Movies]
-ADD CONSTRAINT [FK_DirectorMovie]
-    FOREIGN KEY ([DirectorID])
-    REFERENCES [dbo].[Users_Director]
-        ([ID])
-    ON DELETE NO ACTION ON UPDATE NO ACTION;
-GO
-
--- Creating non-clustered index for FOREIGN KEY 'FK_DirectorMovie'
-CREATE INDEX [IX_FK_DirectorMovie]
-ON [dbo].[Movies]
-    ([DirectorID]);
-GO
-
 -- Creating foreign key on [Genres_ID] in table 'GenreMovie'
 ALTER TABLE [dbo].[GenreMovie]
 ADD CONSTRAINT [FK_GenreMovie_Genre]
@@ -252,22 +228,34 @@ ON [dbo].[GenreMovie]
     ([Movies_ID]);
 GO
 
--- Creating foreign key on [ID] in table 'Users_Actor'
-ALTER TABLE [dbo].[Users_Actor]
-ADD CONSTRAINT [FK_Actor_inherits_User]
-    FOREIGN KEY ([ID])
-    REFERENCES [dbo].[Users]
+-- Creating foreign key on [ActorID] in table 'ActorAgreements'
+ALTER TABLE [dbo].[ActorAgreements]
+ADD CONSTRAINT [FK_ActorActorAgreement]
+    FOREIGN KEY ([ActorID])
+    REFERENCES [dbo].[Actors]
         ([ID])
-    ON DELETE CASCADE ON UPDATE NO ACTION;
+    ON DELETE NO ACTION ON UPDATE NO ACTION;
 GO
 
--- Creating foreign key on [ID] in table 'Users_Director'
-ALTER TABLE [dbo].[Users_Director]
-ADD CONSTRAINT [FK_Director_inherits_User]
-    FOREIGN KEY ([ID])
-    REFERENCES [dbo].[Users]
+-- Creating non-clustered index for FOREIGN KEY 'FK_ActorActorAgreement'
+CREATE INDEX [IX_FK_ActorActorAgreement]
+ON [dbo].[ActorAgreements]
+    ([ActorID]);
+GO
+
+-- Creating foreign key on [DirectorID] in table 'Movies'
+ALTER TABLE [dbo].[Movies]
+ADD CONSTRAINT [FK_MovieDirector]
+    FOREIGN KEY ([DirectorID])
+    REFERENCES [dbo].[Directors]
         ([ID])
-    ON DELETE CASCADE ON UPDATE NO ACTION;
+    ON DELETE NO ACTION ON UPDATE NO ACTION;
+GO
+
+-- Creating non-clustered index for FOREIGN KEY 'FK_MovieDirector'
+CREATE INDEX [IX_FK_MovieDirector]
+ON [dbo].[Movies]
+    ([DirectorID]);
 GO
 
 -- --------------------------------------------------

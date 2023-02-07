@@ -17,20 +17,20 @@ namespace TFT.API.Business.Model
         {
         }
 
+        public virtual DbSet<Actor> Actors { get; set; }
         public virtual DbSet<ActorAgreement> ActorAgreements { get; set; }
+        public virtual DbSet<Director> Directors { get; set; }
         public virtual DbSet<Genre> Genres { get; set; }
         public virtual DbSet<GenreMovie> GenreMovies { get; set; }
         public virtual DbSet<Movie> Movies { get; set; }
         public virtual DbSet<User> Users { get; set; }
-        public virtual DbSet<Users_Actor> Users_Actors { get; set; }
-        public virtual DbSet<Users_Director> Users_Directors { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
 //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-//                optionsBuilder.UseSqlServer("Server=(LocalDB)\\MSSQLLocalDB;attachdbfilename=C:\\Programming Projects\\qualification process\\TFT Falcon\\TFT\\TFT.Repository\\DataSource\\Production\\TFT.mdf;Database=TFT;Trusted_Connection=True;");
+ //               optionsBuilder.UseSqlServer("Server=(LocalDB)\\MSSQLLocalDB;attachdbfilename=C:\\Programming Projects\\qualification process\\TFT Falcon\\TFT\\TFT.Repository\\DataSource\\Production\\TFT.mdf;Database=TFT;Trusted_Connection=True;");
             }
         }
 
@@ -44,7 +44,7 @@ namespace TFT.API.Business.Model
                     .WithMany(p => p.ActorAgreements)
                     .HasForeignKey(d => d.ActorID)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_ActorAgreementActor");
+                    .HasConstraintName("FK_ActorActorAgreement");
 
                 entity.HasOne(d => d.Movie)
                     .WithMany(p => p.ActorAgreements)
@@ -55,17 +55,17 @@ namespace TFT.API.Business.Model
 
             modelBuilder.Entity<GenreMovie>(entity =>
             {
-                entity.HasKey(e => new { e.GenreID, e.MovieID });
+                entity.HasKey(e => new { e.Genres_ID, e.Movies_ID });
 
                 entity.HasOne(d => d.Genres)
                     .WithMany(p => p.GenreMovies)
-                    .HasForeignKey(d => d.GenreID)
+                    .HasForeignKey(d => d.Genres_ID)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_GenreMovie_Genre");
 
                 entity.HasOne(d => d.Movies)
                     .WithMany(p => p.GenreMovies)
-                    .HasForeignKey(d => d.MovieID)
+                    .HasForeignKey(d => d.Movies_ID)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_GenreMovie_Movie");
             });
@@ -76,27 +76,7 @@ namespace TFT.API.Business.Model
                     .WithMany(p => p.Movies)
                     .HasForeignKey(d => d.DirectorID)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_DirectorMovie");
-            });
-
-            modelBuilder.Entity<Users_Actor>(entity =>
-            {
-                entity.Property(e => e.ID).ValueGeneratedNever();
-
-                entity.HasOne(d => d.IDNavigation)
-                    .WithOne(p => p.Users_Actor)
-                    .HasForeignKey<Users_Actor>(d => d.ID)
-                    .HasConstraintName("FK_Actor_inherits_User");
-            });
-
-            modelBuilder.Entity<Users_Director>(entity =>
-            {
-                entity.Property(e => e.ID).ValueGeneratedNever();
-
-                entity.HasOne(d => d.IDNavigation)
-                    .WithOne(p => p.Users_Director)
-                    .HasForeignKey<Users_Director>(d => d.ID)
-                    .HasConstraintName("FK_Director_inherits_User");
+                    .HasConstraintName("FK_MovieDirector");
             });
 
             OnModelCreatingPartial(modelBuilder);

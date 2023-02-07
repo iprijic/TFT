@@ -24,6 +24,17 @@ namespace TFT.API.Security
         private Entities _entites;
         private IDataProtector _protector;
 
+        public static IEnumerable<Claim> GetClaimsFromJWT(String token)
+        {
+            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+            JwtSecurityToken securityToken = (JwtSecurityToken)tokenHandler.ReadToken(token);
+            return securityToken.Claims;
+        }
+
+        public static ClaimsPrincipal GetIdentity(IEnumerable<Claim> claims) => new ClaimsPrincipal(new ClaimsIdentity(claims));
+        public static String? GetClaimByName(IEnumerable<Claim> claims, String claimName) => claims.FirstOrDefault(c => c.Type == claimName)?.Value;
+
+
         private KeyValuePair<String, String> Hashing(String credential, String salt)
         {
             Byte[] spice = new byte[128 / 8];
@@ -44,6 +55,102 @@ namespace TFT.API.Security
             );
 
             return new KeyValuePair<String, String>(hashed, Convert.ToBase64String(spice));
+        }
+
+        private IActionResult UserIsNotUnique(String roleName)
+        {
+            Response.StatusCode = (int)System.Net.HttpStatusCode.BadRequest;
+
+            ODataError error = new ODataError()
+            {
+                ErrorCode = Response.StatusCode.ToString(),
+                Message = $"This user ({roleName}) already exists.",
+                Target = "API"
+            };
+
+            return BadRequest(error);
+        }
+
+        private IActionResult CreateSubEntity(String roleName, KeyValuePair<String, String> saltedHash)
+        {
+
+            ODataError error = new ODataError()
+            {
+                ErrorCode = Response.StatusCode.ToString(),
+                Message = "Ne može se kreirati novi zapis za glumca ili direktora zbog toga što nedostaju neka ulazna obvezna polja",
+                Target = "API"
+            };
+
+            if (nameof(Actor) == roleName && new[] { nameof(Actor.ActorID) }.Intersect(Request.Form.Keys).Any())
+            {
+                Actor actor = new Actor()
+                {
+                    Username = Request.Form[nameof(Business.Model.User.Username)],
+                    Firstname = Request.Form[nameof(Business.Model.User.Firstname)],
+                    Lastname = Request.Form[nameof(Business.Model.User.Lastname)],
+                    Role = roleName,
+                    Hash = saltedHash.Key,
+                    Salt = saltedHash.Value,
+                    ActorID= Request.Form[nameof(Actor.ActorID)]
+                };
+
+                if(_entites.Actors.Any(a => a.Username == Request.Form[nameof(Business.Model.User.Username)].FirstOrDefault()))
+                {
+                    return UserIsNotUnique(roleName);
+                }
+
+                _entites.Add(actor);
+                error = null;
+            }
+
+            if (nameof(Director) == roleName && new[] { nameof(Director.DirectorID) }.Intersect(Request.Form.Keys).Any())
+            {
+                Director director = new Director()
+                {
+                    Username = Request.Form[nameof(Business.Model.User.Username)],
+                    Firstname = Request.Form[nameof(Business.Model.User.Firstname)],
+                    Lastname = Request.Form[nameof(Business.Model.User.Lastname)],
+                    Role = roleName,
+                    Hash = saltedHash.Key,
+                    Salt = saltedHash.Value,
+                    DirectorID = Request.Form[nameof(Director.DirectorID)]
+                };
+
+                if (_entites.Directors.Any(a => a.Username == Request.Form[nameof(Business.Model.User.Username)].FirstOrDefault()))
+                {
+                    return UserIsNotUnique(roleName);
+                }
+
+                _entites.Add(director);
+                error = null;
+            }
+
+            if (error != null)
+            {
+                //Response.StatusCode = (int)System.Net.HttpStatusCode.BadRequest;
+                return BadRequest(error);
+            }
+
+            try
+            {
+                _entites.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                _entites.ChangeTracker.Clear();
+                Response.StatusCode = (int)System.Net.HttpStatusCode.InternalServerError;
+
+                error = new ODataError()
+                {
+                    ErrorCode = Response.StatusCode.ToString(),
+                    Message = ex.Message,
+                    Target = "API"
+                };
+
+                return StatusCode(Response.StatusCode, error);
+            }
+
+            return Ok();
         }
 
         [HttpPost]
@@ -83,7 +190,7 @@ namespace TFT.API.Security
                     return BadRequest(error);
                 }
 
-                if(_entites.Users.Any() == false)
+                if (_entites.Users.Any() == false)
                 {
                     KeyValuePair<String, String> saltedHash = Hashing(Request.Form["PasswordInitial"], null);
 
@@ -96,7 +203,18 @@ namespace TFT.API.Security
                         Hash = saltedHash.Key,
                         Salt = saltedHash.Value
                     };
-   
+
+                    // Ne može se desiti da postoje direktori i glumci ,a niti jedan admin.
+                    if (_entites.Directors.Any())
+                    {
+                        _entites.Directors.RemoveRange(_entites.Directors);
+                    }
+
+                    if (_entites.Actors.Any())
+                    {
+                        _entites.Actors.RemoveRange(_entites.Actors);
+                    }
+
                     _entites.Add(user);
 
                     try
@@ -119,19 +237,52 @@ namespace TFT.API.Security
                     }
 
                 }
+                else if (Request.Headers.ContainsKey("Authorization") && Request.Form.Keys.Contains(nameof(Business.Model.User.Role)))
+                {
+                    String formattedToken = Request.Headers["Authorization"];
+                    String token = null;
 
-                return GenerateToken();
+                    if (formattedToken.StartsWith("Bearer "))
+                    {
+                        token = formattedToken.Replace("Bearer", "").TrimStart();
+                        if(String.IsNullOrEmpty(token) == false)
+                        {
+                            IEnumerable<Claim> claims = GetClaimsFromJWT(token);
+                            String roleName = GetClaimByName(claims, nameof(Business.Model.User.Role));
+                            if (roleName == "Admin")
+                            {
+                                // Sada administrstor ima pravo da kreira novog glumca i/ili direktora.
 
-                // Request.Headers.Add("Authorization", "Bearer " + tokenString);
+                                roleName = Request.Form[nameof(Business.Model.User.Role)];
+                                if (new[] { nameof(Actor), nameof(Director) }.Contains(roleName))
+                                {
+                                    KeyValuePair<String, String> saltedHash = Hashing(Request.Form["PasswordInitial"], null);
+
+                                    IActionResult result = CreateSubEntity(roleName, saltedHash);
+                                    if ((result is OkResult) == false)
+                                        return result;
+                                    return GenerateToken(roleName);
+                                }
+                            }
+                        }
+                    }
+                       
+                }
+
+                return GenerateToken(String.Empty);
             }
 
             return Content("", "application/json");
         }
 
-        private IActionResult GenerateToken()
+        private IActionResult GenerateToken(String roleName)
         {
+            String salt = String.Empty;
+            String hash = String.Empty;
+
+
             User user = _entites.Users.FirstOrDefault(u => u.Username == Request.Form[nameof(Business.Model.User.Username)].FirstOrDefault());
-            if (user == null)
+            if (roleName == String.Empty && user == null)
             {
                 Response.StatusCode = (int)System.Net.HttpStatusCode.Unauthorized;
 
@@ -145,9 +296,56 @@ namespace TFT.API.Security
                 return Unauthorized();
             }
 
-            KeyValuePair<String, String> saltedHash = Hashing(Request.Form["PasswordInitial"].FirstOrDefault() ?? Request.Form["Password"].FirstOrDefault(), user.Salt);
+            Director director = _entites.Directors.FirstOrDefault(u => u.Username == Request.Form[nameof(Business.Model.User.Username)].FirstOrDefault());
+            if (roleName == nameof(Director) && director == null)
+            {
+                Response.StatusCode = (int)System.Net.HttpStatusCode.Unauthorized;
 
-            if(saltedHash.Key != user.Hash) 
+                ODataError error = new ODataError()
+                {
+                    ErrorCode = Response.StatusCode.ToString(),
+                    Message = "Unknown director",
+                    Target = "API"
+                };
+
+                return Unauthorized();
+            }
+
+            Actor actor = _entites.Actors.FirstOrDefault(u => u.Username == Request.Form[nameof(Business.Model.User.Username)].FirstOrDefault());
+            if (roleName == nameof(Actor) && actor == null)
+            {
+                Response.StatusCode = (int)System.Net.HttpStatusCode.Unauthorized;
+
+                ODataError error = new ODataError()
+                {
+                    ErrorCode = Response.StatusCode.ToString(),
+                    Message = "Unknown actor",
+                    Target = "API"
+                };
+
+                return Unauthorized();
+            }
+
+            if(roleName == String.Empty && user != null)
+            {
+                salt = user.Salt;
+                hash = user.Hash;
+            }
+            else if(roleName == nameof(Actor) && actor != null)
+            {
+                salt = actor.Salt;
+                hash = actor.Hash;
+            }
+            else if (roleName == nameof(Director) && director != null)
+            {
+                salt = director.Salt;
+                hash = director.Hash;
+            }
+
+
+            KeyValuePair<String, String> saltedHash = Hashing(Request.Form["PasswordInitial"].FirstOrDefault() ?? Request.Form["Password"].FirstOrDefault(), salt);
+
+            if(saltedHash.Key != hash) 
             {
                 Response.StatusCode = (int)System.Net.HttpStatusCode.Unauthorized;
 
@@ -161,14 +359,39 @@ namespace TFT.API.Security
                 return Unauthorized(error);
             }
 
-
-            IEnumerable<Claim> claims = new[]
+            IEnumerable<Claim> claims = new Claim[] { };
+            if (roleName == String.Empty)
             {
+                claims = new[]
+                {
                     new Claim(nameof(Business.Model.User.Username), user.Username),
                     new Claim(nameof(Business.Model.User.Firstname), user.Firstname),
                     new Claim(nameof(Business.Model.User.Lastname), user.Lastname),
-                    new Claim(nameof(Business.Model.User.Role), user.Role)
-            };
+                    new Claim(nameof(Business.Model.User.Role), "Admin")
+                };
+            }
+            else if(roleName == nameof(Director))
+            {
+                claims = new[]
+                {
+                    new Claim(nameof(Business.Model.User.Username), director.Username),
+                    new Claim(nameof(Business.Model.User.Firstname), director.Firstname),
+                    new Claim(nameof(Business.Model.User.Lastname), director.Lastname),
+                    new Claim(nameof(Business.Model.User.Role), roleName)
+                };
+            }
+            else if (roleName == nameof(Actor))
+            {
+                claims = new[]
+                {
+                    new Claim(nameof(Business.Model.User.Username), actor.Username),
+                    new Claim(nameof(Business.Model.User.Firstname), actor.Firstname),
+                    new Claim(nameof(Business.Model.User.Lastname), actor.Lastname),
+                    new Claim(nameof(Business.Model.User.Role), roleName)
+                };
+            }
+            else
+                throw new NotImplementedException("Claims");
 
             SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor();
 
@@ -193,7 +416,7 @@ namespace TFT.API.Security
         {
             if (Request.Form.ContainsKey("Username") && Request.Form.ContainsKey("Password"))
             {
-                return GenerateToken();
+                return GenerateToken(String.Empty);
 
                 // Request.Headers.Add("Authorization", "Bearer " + tokenString);
             }

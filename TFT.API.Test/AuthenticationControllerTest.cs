@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.IdentityModel.Tokens;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -34,8 +35,8 @@ namespace TFT.API.Test
         {
             Assert.NotNull(entites);
             Assert.Equal(0, entites.Users.Count());
-            Assert.Equal(0, entites.Users_Actors.Count());
-            Assert.Equal(0, entites.Users_Directors.Count());
+            Assert.Equal(0, entites.Actors.Count());
+            Assert.Equal(0, entites.Directors.Count());
         }
 
         /// <summary>
@@ -83,8 +84,10 @@ namespace TFT.API.Test
             Dictionary<string, StringValues> formDictionary = new Dictionary<string, StringValues>();
 
             formDictionary.Clear();
+
             formDictionary.Add(nameof(User.Username), "iperic21@gmail.com");
             formDictionary.Add("Password", "test1234");
+
             form = new FormCollection(formDictionary);
             httpContext.Object.Request.Form = form;
             result = authController.SignInApi();
@@ -119,6 +122,56 @@ namespace TFT.API.Test
             entites.Dispose();
         }
 
+        private Movie[] feedMovie = new Movie[]
+        {
+            new Movie
+            {
+                Title = "Star Wars Episode 10",
+                Description = "None",
+                Budget= 10000000,
+                StartProduction = new DateTime(year:2023,month:4, day:1),
+                EndProduction = new DateTime(year:2023,month:7, day:1),
+                Duration = DateTimeOffset.Now
+            }
+        };
+
+        private  Director[] feedDirector = new Director[]
+        {
+            new Director()
+            {
+                DirectorID = "23252",
+                Username = "glucas@gmail.com",
+                Firstname = "George",
+                Lastname = "Lucas"
+            }
+        };
+
+        private Actor[] feedActor = new Actor[]
+        {
+            new Actor()
+            {
+                ActorID = "24565452",
+                Username = "mhamill@gmail.com",
+                Firstname = "Mark",
+                Lastname = "Hamill"
+            },
+            new Actor()
+            {
+                ActorID = "223532565452",
+                Username = "hford@gmail.com",
+                Firstname = "Harrison",
+                Lastname = "Ford"
+            }
+            ,
+            new Actor()
+            {
+                ActorID = "563532565452",
+                Username = "cfisher@gmail.com",
+                Firstname = "Carrie",
+                Lastname = "Fisher"
+            }
+        };
+
         [Fact]
         void Register_Director_Test()
         {
@@ -139,37 +192,37 @@ namespace TFT.API.Test
             Dictionary<string, StringValues> formDictionary = new Dictionary<string, StringValues>();
             AuthenticationController authController = new AuthenticationController(appConfig, entites, protector);
 
-            var tz = new Users_Director[]
-            {
-                new Users_Director()
+            authController.ControllerContext.HttpContext = httpContext.Object;
+
+            feedDirector.ToList().ForEach(d => 
+            { 
+                formDictionary.Clear();
+                formDictionary.Add(nameof(User.Username), d.Username);
+                formDictionary.Add(nameof(User.Firstname), d.Firstname);
+                formDictionary.Add(nameof(User.Lastname), d.Lastname);
+                formDictionary.Add(nameof(Director.DirectorID), "344356");
+                formDictionary.Add("PasswordInitial", "test8899");
+                formDictionary.Add("PasswordConfirmed", "test8899");
+                formDictionary.Add("Role", nameof(Director));
+
+                form = new FormCollection(formDictionary);
+                httpContext.Object.Request.Form = form;
+
+                result = authController.RegisterUser();
+                if (result is OkObjectResult)
                 {
-                    DirectorID = "23252"
+                    Assert.Equal(StatusCodes.Status200OK, ((OkObjectResult)result).StatusCode);
                 }
-            };
 
-            formDictionary.Clear();
-            formDictionary.Add(nameof(User.Username), "glucas@gmail.com");
-            formDictionary.Add(nameof(User.Firstname), "George");
-            formDictionary.Add(nameof(User.Lastname), "Lucas");
-            form = new FormCollection(formDictionary);
-            httpContext.Object.Request.Form = form;
-
-            result = authController.RegisterUser();
-            if (result is OkObjectResult)
-            {
-                Assert.Equal(StatusCodes.Status200OK, ((OkObjectResult)result).StatusCode);
-            }
-
-            if (result is OkObjectResult && (result as OkObjectResult).Value is FormatToken)
-            {
-                FormatToken = (result as OkObjectResult).Value as FormatToken;
-            }
-            else
-            {
-                throw new Exception("Improper IActionResult cast in AuthenticationController");
-            }
-
-
+                if (result is OkObjectResult && (result as OkObjectResult).Value is FormatToken)
+                {
+                    FormatToken = (result as OkObjectResult).Value as FormatToken;
+                }
+                else
+                {
+                    throw new Exception("Improper IActionResult cast in AuthenticationController");
+                }
+            });
         }
 
         [Fact]
@@ -186,7 +239,45 @@ namespace TFT.API.Test
             Entities entites = DataFactory.GetDbContext();
             Assert.NotEqual(0, entites.Users.Count());
 
+
+            FormCollection form;
+            IActionResult result;
+            Dictionary<string, StringValues> formDictionary = new Dictionary<string, StringValues>();
+
+
             AuthenticationController authController = new AuthenticationController(appConfig, entites, protector);
+
+            authController.ControllerContext.HttpContext = httpContext.Object;
+
+            feedActor.ToList().ForEach(a =>
+            {
+                formDictionary.Clear();
+                formDictionary.Add(nameof(User.Username), a.Username);
+                formDictionary.Add(nameof(User.Firstname), a.Firstname);
+                formDictionary.Add(nameof(User.Lastname), a.Lastname);
+                formDictionary.Add(nameof(Actor.ActorID), "3456356");
+                formDictionary.Add("PasswordInitial", "test4499");
+                formDictionary.Add("PasswordConfirmed", "test4499");
+                formDictionary.Add("Role", nameof(Actor));
+
+                form = new FormCollection(formDictionary);
+                httpContext.Object.Request.Form = form;
+
+                result = authController.RegisterUser();
+                if (result is OkObjectResult)
+                {
+                    Assert.Equal(StatusCodes.Status200OK, ((OkObjectResult)result).StatusCode);
+                }
+
+                if (result is OkObjectResult && (result as OkObjectResult).Value is FormatToken)
+                {
+                    FormatToken = (result as OkObjectResult).Value as FormatToken;
+                }
+                else
+                {
+                    throw new Exception("Improper IActionResult cast in AuthenticationController");
+                }
+            });
 
         }
 
@@ -297,7 +388,7 @@ namespace TFT.API.Test
             }
             else if(entites.Users.Count() > 1)
             {
-                Assert.Contains(SecurityHandler.GetClaimByName(claims, nameof(User.Role)), new[] { nameof(Users_Actor).Split("_").Last(), nameof(Users_Director).Split("_").Last() });
+                Assert.Contains(SecurityHandler.GetClaimByName(claims, nameof(User.Role)), new[] { nameof(Actor), nameof(Director) });
             }
 
             new[] { nameof(User.Username), nameof(User.Firstname), nameof(User.Lastname) }.ToList()

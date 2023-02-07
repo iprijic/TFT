@@ -9,18 +9,18 @@ using Microsoft.EntityFrameworkCore;
 namespace TFT.API.Business.Model
 {
     [Table("GenreMovie")]
-    [Index(nameof(MovieID), Name = "IX_FK_GenreMovie_Movie")]
+    [Index(nameof(Movies_ID), Name = "IX_FK_GenreMovie_Movie")]
     public partial class GenreMovie
     {
         [Key]
-        public long GenreID { get; set; }
+        public long Genres_ID { get; set; }
         [Key]
-        public long MovieID { get; set; }
+        public long Movies_ID { get; set; }
 
-        [ForeignKey(nameof(GenreID))]
+        [ForeignKey(nameof(Genres_ID))]
         [InverseProperty(nameof(Genre.GenreMovies))]
         public virtual Genre Genres { get; set; }
-        [ForeignKey(nameof(MovieID))]
+        [ForeignKey(nameof(Movies_ID))]
         [InverseProperty(nameof(Movie.GenreMovies))]
         public virtual Movie Movies { get; set; }
     }

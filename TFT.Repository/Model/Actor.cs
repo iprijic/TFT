@@ -8,22 +8,30 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TFT.API.Business.Model
 {
-    [Table("Users_Actor")]
-    public partial class Users_Actor
+    public partial class Actor
     {
-        public Users_Actor()
+        public Actor()
         {
             ActorAgreements = new HashSet<ActorAgreement>();
         }
 
-        [Required]
-        public string ActorID { get; set; }
         [Key]
         public long ID { get; set; }
+        [Required]
+        public string ActorID { get; set; }
+        [Required]
+        public string Username { get; set; }
+        [Required]
+        public string Hash { get; set; }
+        [Required]
+        public string Salt { get; set; }
+        [Required]
+        public string Firstname { get; set; }
+        [Required]
+        public string Lastname { get; set; }
+        [Required]
+        public string Role { get; set; }
 
-        [ForeignKey(nameof(ID))]
-        [InverseProperty(nameof(User.Users_Actor))]
-        public virtual User IDNavigation { get; set; }
         [InverseProperty(nameof(ActorAgreement.Actor))]
         public virtual ICollection<ActorAgreement> ActorAgreements { get; set; }
     }
