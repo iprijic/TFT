@@ -91,25 +91,8 @@ namespace TFT.API.Test
 
         static public void FillRequiredTables(Entities entities)
         {
-            entities.Genres.AddRange(new Genre[]
-            {
-                new Genre()
-                {
-                    Name = "Action"
-                },
-                new Genre()
-                {
-                    Name = "Science Fiction"
-                },
-                new Genre()
-                {
-                    Name = "Romance"
-                },
-                new Genre()
-                {
-                    Name = "Adventure"
-                }
-            });
+            TestValues testValues= new TestValues();
+            entities.Genres.AddRange(testValues.FeedGenre);
 
             try
             {

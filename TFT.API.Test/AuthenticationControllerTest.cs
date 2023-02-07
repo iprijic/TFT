@@ -24,7 +24,10 @@ namespace TFT.API.Test
         {
             _controllerHttpContext = new DefaultHttpContext();
             FormatToken = null;
+            _testValues = new TestValues();
         }
+
+        private TestValues _testValues;
 
         private DefaultHttpContext _controllerHttpContext;
         public HttpContext HttpContext => _controllerHttpContext.HttpContext;
@@ -50,10 +53,11 @@ namespace TFT.API.Test
         public HttpResponse Response => HttpContext?.Response!;
 
         private Mock<HttpContext> httpContext;
+        public Mock<HttpContext> HttpMockContext => httpContext;
 
 
         [Fact]
-        void Login_Test()
+        public void Login_Test()
         {
             IConfigurationRoot appConfig = ConfigurationFactory.GetAppConfig();
             Assert.NotNull(appConfig);
@@ -122,56 +126,6 @@ namespace TFT.API.Test
             entites.Dispose();
         }
 
-        private Movie[] feedMovie = new Movie[]
-        {
-            new Movie
-            {
-                Title = "Star Wars Episode 10",
-                Description = "None",
-                Budget= 10000000,
-                StartProduction = new DateTime(year:2023,month:4, day:1),
-                EndProduction = new DateTime(year:2023,month:7, day:1),
-                Duration = DateTimeOffset.Now
-            }
-        };
-
-        private  Director[] feedDirector = new Director[]
-        {
-            new Director()
-            {
-                DirectorID = "23252",
-                Username = "glucas@gmail.com",
-                Firstname = "George",
-                Lastname = "Lucas"
-            }
-        };
-
-        private Actor[] feedActor = new Actor[]
-        {
-            new Actor()
-            {
-                ActorID = "24565452",
-                Username = "mhamill@gmail.com",
-                Firstname = "Mark",
-                Lastname = "Hamill"
-            },
-            new Actor()
-            {
-                ActorID = "223532565452",
-                Username = "hford@gmail.com",
-                Firstname = "Harrison",
-                Lastname = "Ford"
-            }
-            ,
-            new Actor()
-            {
-                ActorID = "563532565452",
-                Username = "cfisher@gmail.com",
-                Firstname = "Carrie",
-                Lastname = "Fisher"
-            }
-        };
-
         [Fact]
         void Register_Director_Test()
         {
@@ -194,7 +148,7 @@ namespace TFT.API.Test
 
             authController.ControllerContext.HttpContext = httpContext.Object;
 
-            feedDirector.ToList().ForEach(d => 
+            _testValues.FeedDirector.ToList().ForEach(d => 
             { 
                 formDictionary.Clear();
                 formDictionary.Add(nameof(User.Username), d.Username);
@@ -249,7 +203,7 @@ namespace TFT.API.Test
 
             authController.ControllerContext.HttpContext = httpContext.Object;
 
-            feedActor.ToList().ForEach(a =>
+            _testValues.FeedActor.ToList().ForEach(a =>
             {
                 formDictionary.Clear();
                 formDictionary.Add(nameof(User.Username), a.Username);
