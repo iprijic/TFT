@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TFT.API.Business.Model
 {
-    public partial class Director
+    public partial class Director //: User
     {
         public Director()
         {
@@ -17,8 +17,12 @@ namespace TFT.API.Business.Model
 
         [Key]
         public long ID { get; set; }
+
+
         [Required]
         public string DirectorID { get; set; }
+
+
         [Required]
         public string Username { get; set; }
         [Required]

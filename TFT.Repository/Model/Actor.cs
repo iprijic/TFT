@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TFT.API.Business.Model
 {
-    public partial class Actor
+    public partial class Actor //: User
     {
         public Actor()
         {
@@ -17,8 +17,11 @@ namespace TFT.API.Business.Model
 
         [Key]
         public long ID { get; set; }
+
         [Required]
         public string ActorID { get; set; }
+
+
         [Required]
         public string Username { get; set; }
         [Required]
