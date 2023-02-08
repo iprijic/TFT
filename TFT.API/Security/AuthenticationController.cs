@@ -20,6 +20,8 @@ namespace TFT.API.Security
             _protector = protector;
         }
 
+        public const String DefaultAdminRoleName = "Admin";
+
         private IConfiguration _appConfig;
         private Entities _entites;
         private IDataProtector _protector;
@@ -199,7 +201,7 @@ namespace TFT.API.Security
                         Username = Request.Form[nameof(Business.Model.User.Username)],
                         Firstname = Request.Form[nameof(Business.Model.User.Firstname)],
                         Lastname = Request.Form[nameof(Business.Model.User.Lastname)],
-                        Role = "Admin",
+                        Role = DefaultAdminRoleName,
                         Hash = saltedHash.Key,
                         Salt = saltedHash.Value
                     };
@@ -249,7 +251,7 @@ namespace TFT.API.Security
                         {
                             IEnumerable<Claim> claims = GetClaimsFromJWT(token);
                             String roleName = GetClaimByName(claims, nameof(Business.Model.User.Role));
-                            if (roleName == "Admin")
+                            if (roleName == DefaultAdminRoleName)
                             {
                                 // Sada administrstor ima pravo da kreira novog glumca i/ili direktora.
 
@@ -367,7 +369,7 @@ namespace TFT.API.Security
                     new Claim(nameof(Business.Model.User.Username), user.Username),
                     new Claim(nameof(Business.Model.User.Firstname), user.Firstname),
                     new Claim(nameof(Business.Model.User.Lastname), user.Lastname),
-                    new Claim(nameof(Business.Model.User.Role), "Admin")
+                    new Claim(nameof(Business.Model.User.Role), DefaultAdminRoleName)
                 };
             }
             else if(roleName == nameof(Director))

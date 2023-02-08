@@ -44,6 +44,25 @@ namespace TFT.API.Controllers
             return Ok(director);
         }
 
+        IActionResult? CheckLoggedUser(String formattedToken, String role, String errorMsg)
+        {
+            if (formattedToken.StartsWith("Bearer "))
+            {
+                String token = formattedToken.Replace("Bearer", "").TrimStart();
+                if (String.IsNullOrEmpty(token) == false)
+                {
+                    IEnumerable<Claim> claims = AuthenticationController.GetClaimsFromJWT(token);
+                    String roleName = AuthenticationController.GetClaimByName(claims, nameof(Business.Model.User.Role));
+                    if (roleName != role)
+                    {
+                        return BadRequest(errorMsg);
+                    }
+                }
+            }
+
+            return null;
+        }
+
         [HttpPost]
         public IActionResult CreateMovie()
         {
@@ -54,19 +73,9 @@ namespace TFT.API.Controllers
              }.All(k => Request.Form.ContainsKey(k)) && Request.Headers.ContainsKey("Authorization"))
             {
                 String formattedToken = Request.Headers["Authorization"];
-                if (formattedToken.StartsWith("Bearer "))
-                {
-                    String token = formattedToken.Replace("Bearer", "").TrimStart();
-                    if (String.IsNullOrEmpty(token) == false)
-                    {
-                        IEnumerable<Claim> claims = AuthenticationController.GetClaimsFromJWT(token);
-                        String roleName = AuthenticationController.GetClaimByName(claims, nameof(Business.Model.User.Role));
-                        if (roleName != "Admin")
-                        {
-                            return BadRequest("Korisnik nije administrator.");
-                        }
-                    }
-                }
+                IActionResult result = CheckLoggedUser(formattedToken, AuthenticationController.DefaultAdminRoleName, "Korisnik nije administrator.");
+                if (result != null)
+                    return result;
 
                 Director director = _entites.Directors.FirstOrDefault(d => d.Username == Request.Form[nameof(Director)].FirstOrDefault());
                 if (director != null)
@@ -123,6 +132,46 @@ namespace TFT.API.Controllers
 
                 return BadRequest("Neka ulazna polja nedostaju kod kreiranja filma ili korisnik nije administrator.");
         }
+
+        [HttpPost]
+        IActionResult SignActorToMovie()
+        {
+            if (new[] {
+            nameof(Movie.Title)
+            }.All(k => Request.Form.ContainsKey(k)) && Request.Headers.ContainsKey("Authorization"))
+            {
+                String formattedToken = Request.Headers["Authorization"];
+                IActionResult result = CheckLoggedUser(formattedToken, nameof(Actor), "Korisnik nije u ulozi glumca.");
+                if (result != null)
+                    return result;
+
+            }
+
+
+            return BadRequest($"Neka ulazna polja nedostaju kod kreiranja filma ili korisnik nije u ulozi glumca.");
+        }
+
+        [HttpPost]
+        IActionResult InviteActorsToMovie()
+        {
+            if (new[] {
+            nameof(Movie.Title)
+            }.All(k => Request.Form.ContainsKey(k)) && Request.Headers.ContainsKey("Authorization"))
+            {
+                String formattedToken = Request.Headers["Authorization"];
+                IActionResult result = CheckLoggedUser(formattedToken, AuthenticationController.DefaultAdminRoleName, "Korisnik nije administrator.");
+                if (result != null)
+                    return result;
+
+                Movie director = _entites.Movies.FirstOrDefault(d => d.Title == Request.Form[nameof(Movie.Title)].FirstOrDefault());
+
+
+            }
+
+
+            return BadRequest("Neka ulazna polja nedostaju kod kreiranja filma ili korisnik nije administrator.");
+        }
+
         public IActionResult Index()
         {
             return View();

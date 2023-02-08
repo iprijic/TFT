@@ -338,7 +338,7 @@ namespace TFT.API.Test
 
             if(entites.Users.Count() == 1)
             {
-                Assert.Equal("Admin", SecurityHandler.GetClaimByName(claims, nameof(User.Role)));
+                Assert.Equal(AuthenticationController.DefaultAdminRoleName, SecurityHandler.GetClaimByName(claims, nameof(User.Role)));
             }
             else if(entites.Users.Count() > 1)
             {

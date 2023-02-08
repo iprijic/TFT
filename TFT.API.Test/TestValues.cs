@@ -39,6 +39,14 @@ namespace TFT.API.Test
                 Firstname = "George",
                 Lastname = "Lucas"
             }
+            ,
+            new Director()
+            {
+                DirectorID = "13252",
+                Username = "lleterrier@gmail.com",
+                Firstname = "Louis",
+                Lastname = "Leterrier"
+            }
         };
 
         public Actor[] FeedActor { get; } = new Actor[]
@@ -65,6 +73,30 @@ namespace TFT.API.Test
                 Firstname = "Carrie",
                 Lastname = "Fisher"
             }
+            ,
+            new Actor()
+            {
+                ActorID = "783532565452",
+                Username = "jwayne@gmail.com",
+                Firstname = "John",
+                Lastname = "Wayne"
+            }
+            ,
+            new Actor()
+            {
+                ActorID = "997532565457",
+                Username = "vdiesel@gmail.com",
+                Firstname = "Vin",
+                Lastname = "Diesel"
+            }
+            ,
+             new Actor()
+            {
+                ActorID = "997532565457",
+                Username = "ajolie@gmail.com",
+                Firstname = "Angelina",
+                Lastname = "Jolie"
+            }
         };
 
         public List<int>[] FeedMovieGenre { get; } = new List<int>[] 
@@ -87,6 +119,16 @@ namespace TFT.API.Test
                 Budget= 10000000,
                 StartProduction = new DateTime(year:2023,month:4, day:1),
                 EndProduction = new DateTime(year:2023,month:7, day:1),
+                Duration = DateTimeOffset.Now
+            }
+            ,
+             new Movie
+            {
+                Title = "The Transporter",
+                Description = "None",
+                Budget= 20000000,
+                StartProduction = new DateTime(year:2023,month:5, day:1),
+                EndProduction = new DateTime(year:2023,month:10, day:1),
                 Duration = DateTimeOffset.Now
             }
         };
