@@ -1,0 +1,94 @@
+
+ZADATAK
+
+Opis aplikacije
+Aplikacija se odnosi na pregled i izradu filmova za glumce i direktore.
+Svaki Film:
+- ima jednog Direktora
+- jednog ili više Glumca
+- Pripada jednom ili više Žanru
+Klasičan Korisnik se u kontekstu ove aplikacije smatra kao super administrator, odnosno
+tehničar neke izdavačke kuće. Njegove ovlasti su manipulacija svih ostalih entiteta, no primarni
+zadatak mu je kreacija korisničkih računa za direktore i glumce.
+1. Prijava kao direktor
+Ukoliko je trenutni korisnik u ulozi direktora njegove ovlasti su:
+ - kreiranje novog filma (naslov, opis, trajanje, budžet, početak snimanja, kraj snimanja
+žanrovi)
+ - poziv glumaca na određeni film
+2. Prijava kao glumac
+Ukoliko je trenutni korisnik u ulozi glumca, njegove ovlasti su:
+- ažuriranje vlastitih podataka (ime, prezime, adresa, očekivani honorar po filmu)
+- pregled svih filmova na koje je pozvan
+- prihvaćanje ili odbijanje poziva od strane direktora za rad na određenom filmu
+
+Očekivani flow aplikacije:
+Super administrator kreira početne račune za direktore i glumce. Nakon tog koraka, u aplikaciju
+se mogu prijaviti i glumci i direktori. Direktor kreira film sa svim potrebnim fieldovima i šalje 
+“poziv” prema glumcima. Maksimalni broj glumaca na filmu je definiran kao odnos između
+budžeti filma i ukupnog honorara svih pozvanih glumaca. Nije moguće pozvati više glumaca
+nego što je u budžetu. Također, moguća je samostalna prijava na film od strane glumca. Glumci
+imaju pravo promjene iznosa svog honorara do početka snimanja filma. Svaka promjena
+zahtjeva odobrenje direktora. Jednom kada je film krenuo sa snimanjem, glumci su “zaključani”
+te više ne mogu ažurirati svoj honorar za taj film. Također, ukoliko dođe do situacije da radi
+promjene željenog honorara glumca ukupni iznos premaši očekivani budžet, direktor nije u
+mogućnosti “pokrenuti snimanje filma”. Za vrijeme snimanja filma, svi glumci koji su na njemu
+nemaju pravo prijave na drugi film ( sve do kraja snimanja trenutnog).
+Očekivane minimalne mogućnosti aplikacije:
+
+1. Direktor
+	a. Pregled svih mojih filmova
+	i. Pregled svih glumaca koji su se prijavili na taj film
+	ii. Filtriranje filma prema žanrovima/budžetu/datumu početka/datumu kraja
+	b. Pregled pojedinog Filma
+	c. Kreiranje Filma
+	d. Brisanje Filma
+	e. Ažuriranje Filma
+
+2. Glumac
+	a. Pregled vlastitih podataka
+	b. Ažuriranje vlastitih podataka
+	c. Pregled svih filmova
+	i. Na kojima je moja pozivnica
+	ii. Na kojima je glumac moja prijava
+	iii. Na kojima je moja uloga osigurana
+	d. Pregled svih slobodnih termina za nove prijave
+	e. Pregled svih filmova od pojedinog direktora
+	i. Filtriranje prema žanru/datumu početka/datumu kraja
+	f. Pregled svih filmova koji pripadaju pojedinom žanru
+	i. Filtriranje prema žanru/datumu početka/datumu kraju
+
+3. Super administrator
+	a. Kreiranje žanrova
+	b. Brisanje žanrova
+	c. Ažuriranje žanrova
+	d. CRUD nad svim entitetima
+
+Očekivana tehnička implementacija aplikacije:
+Tip projekta: ASP.NET Core Web App
+Ciljani framework: .NET 6
+Ciljani ORM: EntityFrameworkCore
+Ciljana baza: prema osobnoj preference
+Ciljani rad s bazom: Code first migrations
+
+Implementacija kompletne aplikacije treba sadržavati:
+1. Dependency Injection uzorak dizajna
+2. Controller-Service-Repository-DBContext uzorak dizajna
+3. Prateći DRY i SOLID principe
+4. Autorizacija i Autentifikacija koristeći JWT
+a. Implementacija vlastitog middleware koji nadjacava [Authorize] dekorator
+b. Uloga korisnika spremljena u Claim
+5. Prijenos pojedinih polja iz modela prema API-u koristeći DTO
+6. Vidljivo odvojen sloj komunikacije s bazom
+7. Implementirano logiranje preko DI (tocka 1.)
+8. Implementacija rada sa AppSettingsima
+	a. Korištenje AppSettingsa gdje god se to čini primjereno ( npr. Db connection
+	string)
+9. Implementacije testova
+	a. Zaseban projekt
+	b. Xunit framework za testove
+	c. Moq package za Mockove
+	d. Implementacija točnih unit testova
+	e. Implementacija točnih integracijskih testova
+
+
+
